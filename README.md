@@ -1,24 +1,69 @@
-# Cadastro de Livros (C)
+# 📚 Sistema de Cadastro de Livros em C
 
-Aplicacao de terminal para gerenciar um pequeno catalogo de livros, feito em C.
+Aplicação de terminal desenvolvida em linguagem C para gerenciamento de um catálogo de livros.
 
-## Funcionalidades
+O projeto implementa operações CRUD completas utilizando:
+- alocação dinâmica de memória (`malloc`, `realloc`, `free`)
+- manipulação de arquivos binários (`fwrite`, `fread`)
+- structs
+- ponteiros
+- tratamento de strings UTF-8
+- interface textual em ASCII
 
-- Cadastrar livros com `titulo`, `autor`, `ano` e `codigo`
-- Listar todos os livros cadastrados
-- Buscar livro por codigo
-- Editar dados de um livro existente
-- Excluir livro por codigo
+---
 
-## Estrutura do projeto
+## ✨ Funcionalidades
 
-- `main.c`: contem toda a logica da aplicacao e o menu principal
+- ✅ Cadastrar livros
+- ✅ Listar livros cadastrados
+- ✅ Buscar livro por código
+- ✅ Editar informações
+- ✅ Excluir livros
+- ✅ Persistência automática em arquivo `.dat`
 
-## Requisitos
+Cada livro possui:
+- `titulo`
+- `autor`
+- `ano`
+- `codigo`
 
-- Compilador C (`gcc` ou equivalente)
+---
 
-## Como compilar e executar
+## 🧠 Conceitos utilizados
+
+Este projeto foi desenvolvido com foco em prática de fundamentos da linguagem C:
+
+- Structs
+- Ponteiros
+- Alocação dinâmica
+- Manipulação de memória
+- Arquivos binários
+- Modularização de funções
+- Tratamento de entrada
+- Strings
+- Terminal/CLI
+
+---
+
+## 🗂 Estrutura do projeto
+
+```text
+├── main.c
+├── livros.dat
+├── README.md
+├── main.bin (Quando Compilado)
+└── main.exe (Quando Compilado)
+```
+
+| Arquivo | Descrição |
+|---|---|
+| `main.c` | Código-fonte principal |
+| `livros.dat` | Persistência binária dos livros |
+| `README.md` | Documentação do projeto |
+
+---
+
+## ⚙️ Compilação
 
 ### Linux
 
@@ -27,21 +72,21 @@ gcc main.c -o main.bin
 ./main.bin
 ```
 
-### Windows (MinGW, por exemplo)
+### Windows (MinGW)
 
 ```bash
 gcc main.c -o main.exe
 ./main.exe
 ```
 
-## Como usar
+---
 
-Ao executar, o programa exibe o menu:
+## 🖥 Interface
 
-```
-+==========================================================+
+```text
++----------------------------------------------------------+
 |              SISTEMA DE CADASTRO DE LIVROS               |
-+==========================================================+
++----------------------------------------------------------+
 |                                                          |
 |   [1] Cadastrar                                          |
 |   [2] Listar                                             |
@@ -50,24 +95,50 @@ Ao executar, o programa exibe o menu:
 |   [5] Excluir                                            |
 |   [0] Sair                                               |
 |                                                          |
-+==========================================================+
++----------------------------------------------------------+
 ```
 
-A listagem e o resultado da busca exibem cada livro em um "card":
+---
 
-```
+## 📖 Exemplo de listagem
+
+```text
 +----------------------------------------------------------+
-| Livro  : #1                                              |
+| Livro : #1                                               |
 +----------------------------------------------------------+
-| Titulo : São josé dos campos                             |
-| Autor  : Julio                                           |
-| Ano    : 1998                                            |
+| Titulo : Dom Casmurro                                    |
+| Autor  : Machado de Assis                                |
+| Ano    : 1899                                            |
 | Codigo : 001                                             |
 +----------------------------------------------------------+
 ```
 
-## Observacoes
+---
 
-- Capacidade maxima atual: ate `100` livros (`struct Livro livros[100]`)
-- Layout em ASCII puro — funciona em qualquer terminal (Linux, Windows Terminal, cmd.exe legado) sem precisar configurar code page
-- O alinhamento das bordas trata corretamente caracteres acentuados (UTF-8) via helper `utf8_len()`
+## 💾 Persistência de dados
+
+Os livros são armazenados automaticamente em arquivo binário utilizando:
+
+```c
+fwrite()
+fread()
+```
+
+Os dados permanecem salvos mesmo após o encerramento do programa.
+
+---
+
+## 🌎 UTF-8
+
+O projeto possui tratamento de caracteres UTF-8 para manter o alinhamento correto de textos com acentuação no terminal.
+
+Exemplo:
+- São Paulo
+- José
+- Álvares
+
+---
+
+## 📄 Licença
+
+Projeto desenvolvido para fins de estudo e prática da linguagem C.
