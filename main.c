@@ -7,14 +7,15 @@
 struct Livro
 {
 	int ano;
-	char autor[100];
+	char autor[50];
 	char titulo[50];
 	char codigo[15];
 };
 
-struct Livro livros[100];
+struct Livro *livros = NULL;
 int total = 0;
 
+/* Função para limpar o terminal */
 void limpar_terminal(){
 	#ifdef _WIN32 // Se o sistema operacional for Windows
 		system("cls"); // Limpa o terminal no Windows
@@ -23,12 +24,21 @@ void limpar_terminal(){
 	#endif
 }
 
+/*
+ * Função para pausar o terminal até que o usuário pressione ENTER
+ * Usado para evitar que o programa feche imediatamente após uma ação.
+ */
 void pause_terminal(){
 	printf("Pressione ENTER para continuar...");
 	getchar(); // Espera o usuário pressionar ENTER
 }
 
-// Conta caracteres UTF-8 (acentos contam como 1, não como 2 bytes)
+/**
+ * Conta caracteres UTF-8 (acentos contam como 1, não como 2 bytes)
+ *
+ * @param s String a ser contada
+ * @return Número de caracteres UTF-8
+ */
 int utf8_len(const char *s) {
 	int len = 0;
 	while (*s) {
@@ -38,23 +48,52 @@ int utf8_len(const char *s) {
 	return len;
 }
 
-// Imprime uma linha do "card" com padding correto para acentos
+/**
+ * Imprime uma linha do "card" com padding correto para acentos
+ *
+ * @param label Rótulo do campo
+ * @param valor Valor do campo
+ */
 void imprimir_campo(const char *label, const char *valor) {
 	int padding = 47 - utf8_len(valor);
 	if (padding < 0) padding = 0;
 	printf("| %s%s%*s |\n", label, valor, padding, "");
 }
 
+/**
+ * Imprime uma linha do "card" com padding correto para acentos
+ *
+ * @param label Rótulo do campo
+ * @param valor Valor do campo
+ */
 void imprimir_campo_int(const char *label, int valor) {
 	char buf[32];
 	snprintf(buf, sizeof(buf), "%d", valor);
 	imprimir_campo(label, buf);
 }
 
-void listar(){   // LISTAGEM
-	printf("+==========================================================+\n");
+/**
+ * Imprime as informações de um livro em um "card" formatado
+ *
+ * @param livro Estrutura do livro a ser impressa
+ */
+void imprimir_livro (struct Livro livro){ 
+	printf("+----------------------------------------------------------+\n");
+	imprimir_campo    ("Codigo : ", livro.codigo);
+	imprimir_campo    ("Titulo : ", livro.titulo);
+	imprimir_campo    ("Autor  : ", livro.autor);
+	imprimir_campo_int("Ano    : ", livro.ano);
+	printf("+----------------------------------------------------------+\n\n");
+}
+
+/*
+ * Função de listagem de livros
+ * Exibe todos os livros cadastrados em uma tabela formatada.
+ */
+void listar(){
+	printf("+----------------------------------------------------------+\n");
 	printf("|                   LISTAGEM DE LIVROS                     |\n");
-	printf("+==========================================================+\n\n");
+	printf("+----------------------------------------------------------+\n\n");
 
 	if (total == 0) {
 		printf("  Nenhum livro cadastrado.\n\n");
@@ -66,16 +105,19 @@ void listar(){   // LISTAGEM
 		snprintf(header, sizeof(header), "#%d", i + 1);
 		printf("+----------------------------------------------------------+\n");
 		imprimir_campo("Livro  : ", header);
-		printf("+----------------------------------------------------------+\n");
-		imprimir_campo    ("Titulo : ", livros[i].titulo);
-		imprimir_campo    ("Autor  : ", livros[i].autor);
-		imprimir_campo_int("Ano    : ", livros[i].ano);
-		imprimir_campo    ("Codigo : ", livros[i].codigo);
-		printf("+----------------------------------------------------------+\n\n");
+		imprimir_livro(livros[i]);
 	}
 	pause_terminal(); // pause - pausou o sistema
 }
 
+/**
+ * Função de busca de um livro
+ * O usuário digita o código do livro que deseja buscar.
+ * O programa busca o livro e, se encontrado, retorna o índice.
+ *
+ * @param codigo Código do livro a ser buscado
+ * @return Índice do livro encontrado ou -1 se não encontrado
+ */
 int buscar(char codigo[15]) {  // BUSCA
  	for (int i = 0; i < total; i++) { 
  		if (strcmp(livros[i].codigo, codigo) == 0) // Se o código do livro for IGUAL ao código digitado pelo usuário = 0
@@ -84,15 +126,20 @@ int buscar(char codigo[15]) {  // BUSCA
  	return -1;
 }
 
-void editar() {  // EDIÇÃO
-    char codigo[100];
+/*
+ * Função de edição de um livro
+ * O usuário digita o código do livro que deseja editar.
+ * O programa busca o livro e, se encontrado, permite a atualização dos dados.
+ */
+void editar() {
+    char codigo[15];
 
-    printf("+==========================================================+\n");
-    printf("|                     EDITAR LIVRO                         |\n");
-    printf("+==========================================================+\n\n");
+    printf("+----------------------------------------------------------+\n");
+    printf("| Editar Livro :                                           |\n");
+    printf("+----------------------------------------------------------+\n\n");
 
     printf("  Digite o codigo do livro que deseja editar: ");
-    scanf(" %[^\n]", codigo);
+    scanf(" %14[^\n]", codigo);
     scanf("%*[^\n]"); scanf("%*c");
 
     int i = buscar(codigo);
@@ -100,11 +147,11 @@ void editar() {  // EDIÇÃO
     printf("\n");
     if (i != -1) {
         printf("  Novo titulo : ");
-        scanf(" %[^\n]", livros[i].titulo);
+        scanf(" %49[^\n]", livros[i].titulo);
         scanf("%*[^\n]"); scanf("%*c");
 
         printf("  Novo autor  : ");
-        scanf("%99[^\n]", livros[i].autor);
+        scanf(" %49[^\n]", livros[i].autor);
         scanf("%*[^\n]"); scanf("%*c");
 
         printf("  Novo ano    : ");
@@ -119,15 +166,21 @@ void editar() {  // EDIÇÃO
     pause_terminal();
 }
 
-void excluir() {  // EXCLUSÃO
-    char codigo[100];
+/*
+ * Função de exclusão de um livro
+ * O usuário digita o código do livro que deseja excluir.
+ * O programa busca o livro e, se encontrado, remove da lista.
+ * A remoção é feita deslocando os livros seguintes para preencher o espaço vazio.
+ */
+void excluir() {
+    char codigo[15];
 
-    printf("+==========================================================+\n");
-    printf("|                     EXCLUIR LIVRO                        |\n");
-    printf("+==========================================================+\n\n");
+    printf("+----------------------------------------------------------+\n");
+    printf("| Excluir Livro :                                          |\n");
+    printf("+----------------------------------------------------------+\n\n");
 
     printf("  Digite o codigo do livro que deseja excluir: ");
-    scanf(" %[^\n]", codigo);
+    scanf(" %14[^\n]", codigo);
     scanf("%*[^\n]"); scanf("%*c");
 
     int i = buscar(codigo);
@@ -138,6 +191,7 @@ void excluir() {  // EXCLUSÃO
             livros[j] = livros[j + 1];
         }
         total--;
+		livros = realloc(livros, total * sizeof(struct Livro));
 
         printf("  >> Livro excluido com sucesso!\n\n");
     } else {
@@ -148,12 +202,19 @@ void excluir() {  // EXCLUSÃO
 }
 
 void cadastrar(){   // CADASTRO
-	printf("+==========================================================+\n");
+	printf("+----------------------------------------------------------+\n");
 	printf("|                    CADASTRAR LIVRO                       |\n");
-	printf("+==========================================================+\n\n");
+	printf("+----------------------------------------------------------+\n\n");
+
+	livros = realloc(livros, (total + 1) * sizeof(struct Livro));
+
+	if (livros == NULL) {
+		printf("Erro de memoria!\n");
+		return;
+	}
 
 	printf("  Codigo : ");
-	scanf(" %[^\n]", livros[total].codigo);  // esta limitando até meu máximo de caracter mencionado
+	scanf(" %14[^\n]", livros[total].codigo);  // esta limitando até meu máximo de caracter mencionado
 	scanf("%*[^\n]"); scanf("%*c");  // limpa o buffer do terminal
 
 	int i = buscar(livros[total].codigo);
@@ -169,7 +230,7 @@ void cadastrar(){   // CADASTRO
 	}
 
 	printf("  Autor  : ");
-	scanf(" %[^\n]", livros[total].autor); // esta limitando até meu máximo de caracter mencionado
+	scanf(" %49[^\n]", livros[total].autor); // esta limitando até meu máximo de caracter mencionado
 	scanf("%*[^\n]"); scanf("%*c");  // limpa o buffer do terminal
 
 	printf("  Ano    : ");
@@ -177,7 +238,7 @@ void cadastrar(){   // CADASTRO
 	scanf("%*[^\n]"); scanf("%*c");  // limpa o buffer do terminal
 
 	printf("  Titulo : ");
-	scanf(" %[^\n]", livros[total].titulo);  // esta limitando até meu máximo de caracter mencionado
+	scanf(" %49[^\n]", livros[total].titulo);  // esta limitando até meu máximo de caracter mencionado
 	scanf("%*[^\n]"); scanf("%*c");  // limpa o buffer do terminal
 
 	total++;
@@ -187,16 +248,104 @@ void cadastrar(){   // CADASTRO
 	pause_terminal();
 }
 
+void salvar_binario() {
+
+	// Abre (ou cria) o arquivo "livros.dat"
+    // "wb" significa:
+    // w = write (escrita)
+    // b = binary (modo binário)
+    FILE *arquivo = fopen("livros.dat", "wb");
+
+    // Verifica se houve erro ao abrir o arquivo
+    if (arquivo == NULL) {
+        printf("Erro ao abrir arquivo!\n");
+        return;
+    }
+
+    // Salva a quantidade total de livros no arquivo
+    //
+    // fwrite(
+    //     &total               -> endereço da variável total
+    //     sizeof(int)          -> tamanho de um inteiro
+    //     1                    -> quantidade de itens
+    //     arquivo              -> arquivo onde será salvo
+    // );
+    //
+    // Isso grava o número total de livros antes dos dados
+    fwrite(&total, sizeof(int), 1, arquivo);
+
+    // Salva todos os livros no arquivo
+    //
+    // livros                  -> ponteiro para o primeiro livro
+    // sizeof(struct Livro)    -> tamanho de UM livro
+    // total                   -> quantidade de livros
+    // arquivo                 -> arquivo destino
+    //
+    // O fwrite percorre a memória e grava tudo em sequência
+    fwrite(livros, sizeof(struct Livro), total, arquivo);
+
+    // Fecha o arquivo
+    // Importante para garantir que tudo seja salvo corretamente
+    fclose(arquivo);
+}
+
+void carregar_binario() {
+
+    // Abre o arquivo "livros.dat" em modo leitura binária
+    // r = read (leitura)
+    // b = binary (modo binário)
+    FILE *arquivo = fopen("livros.dat", "rb");
+
+    // Se o arquivo não existir, inicia com lista vazia
+    if (arquivo == NULL)
+        return;
+
+    // Lê do arquivo a quantidade total de livros
+    //
+    // fread(
+    //     &total      -> onde o valor será armazenado
+    //     sizeof(int) -> tamanho de um inteiro
+    //     1           -> le a unica lista que pode existir de livros
+    //     arquivo
+    // );
+    fread(&total, sizeof(int), 1, arquivo);
+
+    // Se tem livros, aloca um bloco de memória suficiente para armazenar todos
+    livros = malloc(total * sizeof(struct Livro));
+
+    // Verifica se houve erro ao alocar memória
+    if (livros == NULL) {
+        printf("  >> Erro de memoria!\n");
+        fclose(arquivo);
+        return;
+    }
+
+    // Lê todos os livros do arquivo
+    //
+    // livros                  -> destino do dado
+    // sizeof(struct Livro)    -> tamanho de cada livro
+    // total                   -> quantidade de livros
+    // arquivo                 -> arquivo origem
+    //
+    // Os bytes do arquivo são copiados diretamente para a memória
+    fread(livros, sizeof(struct Livro), total, arquivo);
+
+    // Fecha o arquivo
+    fclose(arquivo);
+}
+
 int main(void){
 
 	bool continua = true;
 	limpar_terminal(); // limpa a tela
 
+	carregar_binario();
+
 	while (continua == true){ // while é minha estrutura de repetição
 		limpar_terminal();	 // limpa a tela
-		printf("+==========================================================+\n");
+		printf("+----------------------------------------------------------+\n");
 		printf("|              SISTEMA DE CADASTRO DE LIVROS               |\n");
-		printf("+==========================================================+\n");
+		printf("+----------------------------------------------------------+\n");
 		printf("|                                                          |\n");
 		printf("|   [1] Cadastrar                                          |\n");
 		printf("|   [2] Listar                                             |\n");
@@ -205,37 +354,34 @@ int main(void){
 		printf("|   [5] Excluir                                            |\n");
 		printf("|   [0] Sair                                               |\n");
 		printf("|                                                          |\n");
-		printf("+==========================================================+\n");
+		printf("+----------------------------------------------------------+\n");
 		printf("\n  >> Escolha uma opcao: ");
 
 		int valor;
 
 		scanf("%d", &valor);
 		scanf("%*[^\n]"); scanf("%*c");
+		limpar_terminal();	 // limpa a tela
 
 		switch (valor){ // é minha função de comparação
 			case 0:{
 				continua = false;
-				limpar_terminal();	 // limpa a tela
 				break;
 			}
 			case 1:{
-				limpar_terminal();	 // limpa a tela
 				cadastrar();
 				break;
 			}
 			case 2:{
-				limpar_terminal();	 // limpa a tela
 				listar();
 				break;
 			}
 			case 3: {
-				limpar_terminal();	 // limpa a tela
-				char codigo[100];
+				char codigo[15];
 
-				printf("+==========================================================+\n");
+				printf("+----------------------------------------------------------+\n");
 				printf("|                     BUSCAR LIVRO                         |\n");
-				printf("+==========================================================+\n\n");
+				printf("+----------------------------------------------------------+\n\n");
 				printf("  Digite o codigo para buscar: ");
 				scanf(" %[^\n]", codigo);
 				scanf("%*[^\n]"); scanf("%*c");
@@ -246,12 +392,7 @@ int main(void){
 				if (i != -1) {
 					printf("+----------------------------------------------------------+\n");
 					printf("| Livro encontrado!                                        |\n");
-					printf("+----------------------------------------------------------+\n");
-					imprimir_campo    ("Titulo : ", livros[i].titulo);
-					imprimir_campo    ("Autor  : ", livros[i].autor);
-					imprimir_campo_int("Ano    : ", livros[i].ano);
-					imprimir_campo    ("Codigo : ", livros[i].codigo);
-					printf("+----------------------------------------------------------+\n\n");
+					imprimir_livro(livros[i]);
 				} else {
 					printf("  >> Livro nao encontrado!\n\n");
 				}
@@ -260,12 +401,10 @@ int main(void){
 				break;
 			}
 			case 4:{
-				limpar_terminal();	 // limpa a tela
 				editar();
 				break;
 			}
 			case 5:{
-				limpar_terminal();	 // limpa a tela
 				excluir();
 				break;
 			}
@@ -276,5 +415,9 @@ int main(void){
 			}
 		}
 	}
+
+	salvar_binario();
+	limpar_terminal();	 // limpa a tela
+	free(livros);
 	return 0;
 }
